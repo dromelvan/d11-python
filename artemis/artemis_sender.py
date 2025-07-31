@@ -15,4 +15,4 @@ class ArtemisSender:
         """
         connection = self.artemis_connection_manager.get_connection()
         connection.send(destination=destination, body=body, headers={'content-type': 'application/json'})
-        logging.info('Message sent to destination: %s', destination)
+        logging.debug('Message sent to destination: %s', destination)
