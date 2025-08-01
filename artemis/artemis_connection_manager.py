@@ -58,7 +58,7 @@ class ArtemisConnectionManager:
         if self.connection and self.connection.is_connected():
             listener_name = listener.__class__.__name__
             self.connection.set_listener(listener_name, listener)
-            logging.info('Listener %s set for Artemis MQ', listener_name)
+            logging.debug('Listener %s set for Artemis MQ', listener_name)
 
             for queue in self.listener.queues:
                 self.connection.subscribe(destination=queue, id=queue, ack='auto')

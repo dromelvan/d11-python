@@ -8,14 +8,16 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     force=True
 )
+logging.getLogger("stomp").setLevel(logging.WARNING)
 
 from dotenv import load_dotenv
 load_dotenv()
 
-from d11 import D11Service
+from d11 import D11Service, D11Daemon
 
 commands = [ 
     { "name": "hello", "description": "Prints a greeting", "arguments": []},
+    { "name": "d11_daemon", "description": "Starts the D11 deamon that runs the scheduler and MQ listener", "arguments": []},
     { "name": "update_squads", "description": "Triggers a team squad update", "arguments": [] }, 
     { "name": "update_match", "description": "Triggers a match update", "arguments": [ 
             { "name": "--match_id", "type": int, "required": True, "help": "Match ID"},
@@ -46,6 +48,9 @@ def main():
 
     if args.command == "hello":
         logging.info("Hello, World!")
+    elif args.command == "d11_daemon":
+        d11_daemon = D11Daemon()
+        d11_daemon.start()
     elif args.command == "update_squads":
         competition_id = os.getenv('PREMIER_LEAGUE_DEFAULT_COMPETITION_ID')
         season = os.getenv('PREMIER_LEAGUE_DEFAULT_SEASON')
