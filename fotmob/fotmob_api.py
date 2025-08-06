@@ -2,34 +2,22 @@ import os
 import requests
 import logging
 
+from .fotmob_token_manager import FotmobTokenManager
+
 class FotmobApi:
     """
     Provides methods to interact with the Fotmob API.
     """
 
-    authentocation_token = None
+    def __init__(self):
+        self.fotmob_token_manager = FotmobTokenManager()
 
-    def get_authentication_token(self):
-        """
-        Gets an authentication token for the Fotmob API. The url for this is a bit sketchy but it works for now.
-        """
-        if not self.authentocation_token:
-            try:
-                response = requests.get(os.getenv("FOTMOB_AUTHENTICATION_TOKEN_URL"))
-                response.raise_for_status()
-                token = response.json().get("x-mas")
-                if not token:
-                    raise ValueError("No 'x-mas' field in response")
-                self.authentocation_token = token
-            except Exception as e:
-                logging.error(f"Error getting authentication token: {e}")
-        return self.authentocation_token
-
-    def get_headers(self):
+    def get_headers(self, url):
         """
         Returns the headers required for Fotmob API requests, including the authentication token.
         """
-        token = self.get_authentication_token()
+        token = self.fotmob_token_manager.get_token(url)
+
         if not token:
             logging.error("Authentication token is not available.")
             return {}
@@ -75,7 +63,8 @@ class FotmobApi:
         If an error occurs, it logs the error and returns None.
         """
         try:
-            response = requests.get(url, headers=self.get_headers())
+            headers = self.get_headers(url)
+            response = requests.get(url, headers=headers)
             response.raise_for_status()
             return response.json()
         except Exception as e:
