@@ -1,0 +1,20 @@
+The stuff in this directory is used for fetching HAR files from Fotmob in order to grab a valid authenication token.
+
+Installation:
+
+* Copy export-har.scpt to ~/.scripts
+* Copy com.d11.exporthar.plist to ~/Library/LaunchAgents. 
+  Change <string>/Users/<user>/.scripts/export-har.scpt</string> to correct username.
+  Change <string><url></string> to the URL we want to poll.
+* Open Safari manually, open the inspector and select the Network tab. Safari will remember this when the script is run. 
+  Also download something to select the directory the script will download to. Safari will remember this too.
+* Go to ~/.scripts and test the script by doing:
+  osascript export-har.scpt <url>
+  The first time it is run we will likely have to click some approvals and add some permissions which means it won't succeed.
+  Run it again and check that a .har file for the URL has been created in the selected download directory.
+  The x-mas header with authentication token should be present in some request in the .har file.
+* Start the schedule by doing:
+  launchctl load ~/Library/LaunchAgents/com.d11.exporthar.plist  
+* Stop the schedule by doing:
+  launchctl unload ~/Library/LaunchAgents/com.d11.exporthar.plist  
+
