@@ -33,12 +33,17 @@ class ArtemisListener(stomp.ConnectionListener):
         """
         Handles a message by checking destination and forwarding it to the relevant method.
         """
-        destination = frame.headers.get('destination', '')
 
-        if destination == self.active_match_queue:
+        # Different versions of ArtemisMQ treat the queue header differently
+        destination = frame.headers.get('destination', '')
+        subscription = frame.headers.get('subscription', '')
+
+        if destination == self.active_match_queue or self.active_match_queue in subscription:
             self.on_active_match(frame)
         elif destination == self.ping_queue:
             self.on_ping(frame)
+        else:
+            logging.warning('Unknown message destination/subscription: %s / %s', destination, subscription)
 
     def on_ping(self, frame):
         """
