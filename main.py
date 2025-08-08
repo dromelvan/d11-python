@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import subprocess
 
 import logging
 logging.basicConfig(
@@ -14,6 +15,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from d11 import D11Service, D11Daemon
+from fotmob import FotmobService
 
 commands = [ 
     { "name": "hello", "description": "Prints a greeting", "arguments": []},
@@ -23,7 +25,11 @@ commands = [
             { "name": "--match_id", "type": int, "required": True, "help": "Match ID"},
             { "name": "--finish", "action": "store_true", "required": False, "help": "Finish the match"},
         ] 
-    } 
+    },
+    { "name": "export_fotmob_har", "description": "Runs the export_har.scpt to get a .har file that can be parsed", "arguments": [
+            { "name": "--url", "type": str, "required": True, "help": "Output file path for the .har file"}
+    ]},
+    { "name": "parse_fotmob_har", "description": "Parses a .har file from Fotmob and updates the token in .fotmob_api_token", "arguments": []},
 ]
 
 def main():
@@ -63,6 +69,12 @@ def main():
     elif args.command == "update_match":
         d11_service = D11Service()
         d11_service.update_match(args.match_id, args.finish)
+    elif args.command == "export_fotmob_har":
+        subprocess.run(["osascript", "./export_har/export-har.scpt", args.url])
+    elif args.command == "parse_fotmob_har":
+        file_path = os.getenv('FOTMOB_HAR_FILE_PATH')
+        fotmob_service = FotmobService()
+        fotmob_service.parse_fotmob_har(file_path)
     else:
         parser.print_help()
 
