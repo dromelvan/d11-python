@@ -261,24 +261,24 @@ class FotmobService:
         """
         Parses a .har file from Fotmob and updates the token in .fotmob_api_token.
         """
-        try:
-            with open(file_path, "r") as file:
-                har = json.loads(file.read(), object_hook=lambda dictionary: SimpleNamespace(**dictionary))
-                token = None
-                for entry in har.log.entries:
-                    if 'matchDetails' in entry.request.url:
-                        for header in entry.request.headers:
-                            if header.name == 'x-mas':
-                                token = header.value
+        if not os.path.exists(file_path):
+            logging.debug("Fotmob HAR file not found at the specified path")
+            return
 
-                if not token:
-                    logging.error(f"Fotmob token not found in {file_path}")
-                else:
-                    with open('.fotmob_api_token', 'w') as token_file:
-                        token_file.write(token)
-                        logging.info(f"Fotmob token updated in .fotmob_api_token: {token}")
+        with open(file_path, "r") as file:
+            har = json.loads(file.read(), object_hook=lambda dictionary: SimpleNamespace(**dictionary))
+            token = None
+            for entry in har.log.entries:
+                if 'matchDetails' in entry.request.url:
+                    for header in entry.request.headers:
+                        if header.name == 'x-mas':
+                            token = header.value
 
-                        os.remove(file_path)
+            if not token:
+                logging.error(f"Fotmob token not found in {file_path}")
+            else:
+                with open('.fotmob_api_token', 'w') as token_file:
+                    token_file.write(token)
+                    logging.info(f"Fotmob token updated in .fotmob_api_token: {token}")
 
-        except FileNotFoundError:
-            logging.info("Fotmob HAR file not found at the specified path.")
+                    os.remove(file_path)

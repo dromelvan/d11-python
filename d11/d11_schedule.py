@@ -4,6 +4,7 @@ import logging
 import schedule
 
 from d11 import D11Service
+from fotmob import FotmobService
 
 class D11Schedule:
     """
@@ -24,11 +25,24 @@ class D11Schedule:
 
         self.d11_service.update_squads(competition_id, season)
 
+    def task_update_fotmob_token(self):
+        """
+        Triggers a Fotmob token update.
+        """
+        file_path = os.getenv('FOTMOB_HAR_FILE_PATH')
+        if file_path is None:
+            logging.error("FOTMOB_HAR_FILE_PATH is not defined in .env")
+            return
+
+        fotmob_service = FotmobService()
+        fotmob_service.parse_fotmob_har(file_path)  
+
     def start(self):
         """
         Starts the scheduler.
         """
         schedule.every().day.at("10:00").do(self.task_update_squads)
+        schedule.every().minute.do(self.task_update_fotmob_token)
 
         logging.info("D11 schedule started...")
 
