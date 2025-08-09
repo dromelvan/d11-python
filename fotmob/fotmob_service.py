@@ -281,4 +281,4 @@ class FotmobService:
                     token_file.write(token)
                     logging.info(f"Fotmob token updated in .fotmob_api_token: {token}")
 
-                    os.remove(file_path)
+            os.remove(file_path)
