@@ -1,4 +1,5 @@
 The stuff in this directory is used for fetching HAR files from Fotmob in order to grab a valid authenication token.
+This should probably be a last resort if neither token generator or fetching token using Selenium works.
 
 Installation:
 
