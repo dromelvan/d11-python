@@ -30,6 +30,7 @@ commands = [
             { "name": "--url", "type": str, "required": True, "help": "Output file path for the .har file"}
     ]},
     { "name": "parse_fotmob_har", "description": "Parses a .har file from Fotmob and updates the token in .fotmob_api_token", "arguments": []},
+    { "name": "update_fotmob_token", "description": "Updates the Fotmob API token using Selenium", "arguments": []},
 ]
 
 def main():
@@ -75,6 +76,9 @@ def main():
         file_path = os.getenv('FOTMOB_HAR_FILE_PATH')
         fotmob_service = FotmobService()
         fotmob_service.parse_fotmob_har(file_path)
+    elif args.command == "update_fotmob_token": 
+        fotmob_service = FotmobService()
+        fotmob_service.get_fotmob_api_token()
     else:
         parser.print_help()
 

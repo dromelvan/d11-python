@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from datetime import datetime, timedelta
 
 from .fotmob_api import FotmobApi
+from .fotmob_selenium import FotmobSelenium
 from .fotmob_models import FotmobMatchData, FotmobGoal, FotmobPlayer, FotmobTeam, FotmobFixture
 
 class FotmobService:
@@ -15,6 +16,7 @@ class FotmobService:
 
     def __init__(self):        
         self.api = FotmobApi()
+        self.selenium = FotmobSelenium()
 
     def get_teams(self, league_id):
         """
@@ -282,3 +284,15 @@ class FotmobService:
                     logging.info(f"Fotmob token updated in .fotmob_api_token: {token}")
 
             os.remove(file_path)
+
+    def get_fotmob_api_token(self):
+        """
+        Fetches the Fotmob API token using Selenium and writes it to .fotmob_api_token.
+        """
+        token = self.selenium.get_api_token()
+        if not token:
+            logging.error("Failed to retrieve Fotmob API token using Selenium")
+        else:
+            with open('.fotmob_api_token', 'w') as token_file:
+                token_file.write(token)
+                logging.info(f"Fotmob API token via Selenium updated in .fotmob_api_token: {token}")    
