@@ -2,9 +2,14 @@ import os
 import time
 import logging
 import schedule
+import random
+
+from datetime import datetime, timedelta
 
 from d11 import D11Service
 from fotmob import FotmobService
+
+UPDATE_FOTMOB_TOKEN_TAG = "update_fotmob_token"
 
 class D11Schedule:
     """
@@ -29,20 +34,29 @@ class D11Schedule:
         """
         Triggers a Fotmob token update.
         """
-        file_path = os.getenv('FOTMOB_HAR_FILE_PATH')
-        if file_path is None:
-            logging.error("FOTMOB_HAR_FILE_PATH is not defined in .env")
-            return
 
         fotmob_service = FotmobService()
-        fotmob_service.parse_fotmob_har(file_path)  
+        fotmob_service.get_fotmob_api_token()
+
+        # After running, schedule the next run with jitter
+        next_run = datetime.now() + timedelta(hours=2) + timedelta(minutes=random.randint(-5, 5))
+        if next_run.hour < 9:
+            next_run = next_run.replace(hour=9, minute=random.randint(0, 30))
+        elif next_run.hour >= 24:
+            # Push to next day's 9:00
+            next_run = (next_run + timedelta(days=1)).replace(hour=9, minute=random.randint(0, 59))
+
+        schedule.clear(UPDATE_FOTMOB_TOKEN_TAG)
+        schedule.every().day.at(next_run.strftime("%H:%M")).do(self.task_update_fotmob_token).tag(UPDATE_FOTMOB_TOKEN_TAG)
+        logging.info(f"Next run scheduled for {next_run.strftime('%Y-%m-%d %H:%M')}")
 
     def start(self):
         """
         Starts the scheduler.
         """
         schedule.every().day.at("10:00").do(self.task_update_squads)
-        schedule.every().minute.do(self.task_update_fotmob_token)
+        schedule.every().minute.do(self.task_update_fotmob_token).tag(UPDATE_FOTMOB_TOKEN_TAG)
+
 
         logging.info("D11 schedule started...")
 
