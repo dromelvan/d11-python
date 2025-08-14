@@ -22,6 +22,14 @@ class D11Api:
         url = url_template.format(match_id=match_id)
         return self._call_api(url)
 
+    def get_player_by_premier_league_id(self, premier_league_id):
+        """
+        Gets player data for a player with given Premier League ID.
+        """
+        url_template = os.getenv("D11_API_BASE_URL") + os.getenv("D11_API_PLAYER_BY_PREMIER_LEAGUE_ID_ENDPOINT")
+        url = url_template.format(premier_league_id=premier_league_id)
+        return self._call_api(url)
+    
     def _call_api(self, url):
         """        
         Makes a GET request to the D11 API and returns the JSON response.
