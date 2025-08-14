@@ -1,4 +1,6 @@
+import os
 import json
+import requests
 
 from types import SimpleNamespace
 
@@ -12,6 +14,7 @@ class PremierLeagueService:
 
     def __init__(self):        
         self.api = PremierLeagueApi()
+        self.premier_league_player_photo_url = os.getenv('PREMIER_LEAGUE_PLAYER_PHOTO_URL')
 
     def get_teams(self, competition_id, season):
         """
@@ -70,4 +73,13 @@ class PremierLeagueService:
 
         return players
 
+    def download_player_photo(self, image_id):
+        """
+        Downloads a player photo from PremierLeague.com
+        """
+        request = requests.get(self.premier_league_player_photo_url.format(id = image_id))
 
+        if (request.status_code == 200):
+            return request.content
+        else:
+            return None
