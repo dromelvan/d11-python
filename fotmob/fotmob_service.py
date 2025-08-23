@@ -108,7 +108,7 @@ class FotmobService:
         match_data.away_team_name = general.awayTeam.name
 
         match_datetime = datetime.strptime(general.matchTimeUTC, "%a, %b %d, %Y, %H:%M %Z")
-        match_datetime = match_datetime + timedelta(hours=2)
+        match_datetime = match_datetime + timedelta(hours=3)
         match_data.datetime = match_datetime.strftime("%Y-%m-%d %H:%M")
 
         status = data.header.status
@@ -166,6 +166,38 @@ class FotmobService:
                 elif event.card == "Red":
                     cards[player_id]["red_card_time"] = event.time
 
+        # Fetch more precise ratings --------------------------------------------------------------                    
+
+        player_ratings = {}
+
+        for player_id, player in vars(data.content.playerStats).items():
+            try:
+                # Ensure player.stats exists and is iterable
+                if not getattr(player, "stats", None):
+                    continue
+
+                # Find the "top_stats" section
+                top_stats_section = next(
+                    (s for s in player.stats if getattr(s, "key", None) == "top_stats"),
+                    None
+                )
+                if not top_stats_section:
+                    continue
+
+                # Ensure the stats map exists
+                stats_map = vars(getattr(top_stats_section, "stats", SimpleNamespace()))
+                if "FotMob rating" not in stats_map:
+                    continue
+
+                # Extract the value safely
+                rating_value = getattr(stats_map["FotMob rating"].stat, "value", None)
+                if rating_value is not None:
+                    player_ratings[int(player_id)] = rating_value
+
+            except Exception:
+                # Skip player if any unexpected structure is found
+                continue
+
         # Player data -----------------------------------------------------------------------------
 
         lineup = data.content.lineup
@@ -200,6 +232,12 @@ class FotmobService:
             player.team_name = player_data.team_name
             player.lineup = player_data.lineup
             player.goals_conceded = player_data.goalsConceded
+            player.played_position = "N/A"
+
+            if player.player_fotmob_id in player_ratings:
+                player.rating = int(player_ratings[player.player_fotmob_id] * 100)
+            elif player.lineup == "STARTING_LINEUP":
+                player.rating = 600  # Default rating for starting players since Fotmob takes a few minutes to give a rating
 
             if player.player_fotmob_id in cards:
                 card_data = cards[player.player_fotmob_id]
@@ -209,8 +247,9 @@ class FotmobService:
             if hasattr(player_data, "performance"):
                 performance = player_data.performance
 
-                if hasattr(performance, "rating"):
-                    player.rating = int(performance.rating * 100)
+                # We're not using this rating for now since it only has once decimal
+                # if hasattr(performance, "rating"):
+                #     player.rating = int(performance.rating * 100)
 
                 if hasattr(performance, "events"):
                     for event in performance.events:
@@ -229,7 +268,7 @@ class FotmobService:
                             player.substitution_off_time = event.time
 
                         # Fotmob doesn't provide a default rating for players who didn't play for long enough                            
-                        if player.rating == 0:
+                        if not player.rating or player.rating == 0:
                             player.rating = 600
 
                 if player.team_fotmob_id == match_data.home_team_fotmob_id and player.rating >= home_team_moms["rating"]:
