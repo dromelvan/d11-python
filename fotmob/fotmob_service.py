@@ -80,8 +80,9 @@ class FotmobService:
             fixture.away_team_stat_source_id = fixture_data.away.id
             fixture.away_team_name = fixture_data.away.name
 
-            fixture_datetime = datetime.strptime(fixture_data.status.utcTime, "%Y-%m-%dT%H:%M:%SZ")
-            fixture_datetime = fixture_datetime + timedelta(hours=2)
+            # Replace "Z" with "+00:00" so fromisoformat understands it and convert to local time zone
+            fixture_datetime = datetime.fromisoformat(fixture_data.status.utcTime.replace("Z", "+00:00")).astimezone()
+
             fixture.datetime = fixture_datetime.strftime("%Y-%m-%d %H:%M:%S")
             fixtures.append(fixture)
 
@@ -335,3 +336,28 @@ class FotmobService:
             with open('.fotmob_api_token', 'w') as token_file:
                 token_file.write(token)
                 logging.info(f"Fotmob API token via Selenium updated in .fotmob_api_token: {token}")    
+
+
+    def generate_pl_fixtures(self, league_id):
+        """
+        Generates Premier League fixture migration for the upcoming season.
+        """
+        fixtures = FotmobService().get_fixtures(league_id)
+
+        sql = """insert into ${schema}.match (home_team_id, away_team_id, match_week_id, stadium_id, whoscored_id, datetime, home_team_goals, away_team_goals, previous_home_team_goals, previous_away_team_goals, elapsed, status, created_at, updated_at)
+        values ((select (id) from ${schema}.team where whoscored_id = {home_team_id}), (select (id) from ${schema}.team where whoscored_id = {away_team_id}),
+                (select (id) from ${schema}.match_week where match_week_number = {match_week_number} and season_id = (select max(id) from ${schema}.season)),
+                (select (stadium_id) from ${schema}.team where id = (select (id) from ${schema}..team where whoscored_id = {home_team_id})),
+                {stat_source_id}, '{datetime}', 0, 0, 0, 0, 'N/A', 0, now()::timestamp, now()::timestamp);"""
+        migration = [];
+
+        for fixture in fixtures:
+            home_team_id = fixture.home_team_stat_source_id
+            away_team_id = fixture.away_team_stat_source_id
+
+            fixture_sql = sql.format(sql, schema='{flyway:defaultSchema}', home_team_id=home_team_id, away_team_id=away_team_id, match_week_number=fixture.round, stat_source_id=fixture.stat_source_id, datetime=fixture.datetime)
+            migration.append(fixture_sql)
+
+        with open('pl_fixtures.sql', 'w') as f:
+            for line in migration:
+                f.write(f"{line}\n")
