@@ -34,6 +34,7 @@ commands = [
     ]},
     { "name": "parse_fotmob_har", "description": "Parses a .har file from Fotmob and updates the token in .fotmob_api_token", "arguments": []},
     { "name": "update_fotmob_token", "description": "Updates the Fotmob API token using Selenium", "arguments": []},
+    { "name": "generate_pl_fixtures", "description": "Generates Premier League fixtures for the upcoming season", "arguments": []},
     { "name": "generate_d11_fixtures", "description": "Generates D11 fixtures for the upcoming season", "arguments": []},
 ]
 
@@ -101,6 +102,9 @@ def main():
     elif args.command == "generate_d11_fixtures":
         d11_service = D11Service()
         d11_service.generate_d11_fixtures()
+    elif args.command == "generate_pl_fixtures":
+        fotmob_service = FotmobService()
+        fotmob_service.generate_pl_fixtures(47)
     else:
         parser.print_help()
 
