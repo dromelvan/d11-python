@@ -14,7 +14,7 @@ logging.getLogger("stomp").setLevel(logging.WARNING)
 from dotenv import load_dotenv
 load_dotenv()
 
-from tkinter.filedialog import askdirectory
+from tkinter.filedialog import askdirectory, askopenfilename
 
 from d11 import D11Service, D11Daemon
 from fotmob import FotmobService
@@ -34,8 +34,9 @@ commands = [
     ]},
     { "name": "parse_fotmob_har", "description": "Parses a .har file from Fotmob and updates the token in .fotmob_api_token", "arguments": []},
     { "name": "update_fotmob_token", "description": "Updates the Fotmob API token using Selenium", "arguments": []},
+    { "name": "update_fotmob_ids", "description": "Generates SQL for updating missing Fotmob player ids", "arguments": []},
     { "name": "generate_pl_fixtures", "description": "Generates Premier League fixtures for the upcoming season", "arguments": []},
-    { "name": "generate_d11_fixtures", "description": "Generates D11 fixtures for the upcoming season", "arguments": []},
+    { "name": "generate_d11_fixtures", "description": "Generates D11 fixtures for the upcoming season", "arguments": []},    
 ]
 
 def main():
@@ -99,6 +100,14 @@ def main():
     elif args.command == "update_fotmob_token": 
         fotmob_service = FotmobService()
         fotmob_service.get_fotmob_api_token()
+    elif args.command == "update_fotmob_ids":
+        id_file_name = askopenfilename(initialdir= '.')
+
+        if id_file_name == "":
+            sys.exit();
+    
+        fotmob_service = FotmobService()
+        fotmob_service.generate_missing_player_ids(id_file_name)
     elif args.command == "generate_d11_fixtures":
         d11_service = D11Service()
         d11_service.generate_d11_fixtures()
