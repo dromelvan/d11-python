@@ -1,6 +1,8 @@
 import os
+import re
 import json
 import logging
+import unicodedata
 
 from types import SimpleNamespace
 from datetime import datetime, timedelta
@@ -360,4 +362,32 @@ class FotmobService:
 
         with open('pl_fixtures.sql', 'w') as f:
             for line in migration:
+                f.write(f"{line}\n")
+
+    def generate_missing_player_ids(self, id_file_name):
+        """
+        Gets players from all teams in Fotmob and generates sql for updating fotmob id for ids that are not found in the provided file.
+        """
+        players = self.get_players()
+
+        ids = []
+        with open(id_file_name, 'r') as f:
+            for id in f:            
+                id = id.strip()
+                ids.append(int(id))
+
+        def parameterize_name(name):
+            name = unicodedata.normalize('NFKD', name).encode('ascii', 'ignore').decode('utf-8')
+            name = name.lower()
+            name = re.sub(r'[^a-z0-9]+', '-', name)
+            name = name.strip('-')
+            return name
+
+        sql = [];
+        for player in players:
+            if player['stat_source_id'] not in ids:
+                sql.append(f"update production.player set whoscored_id = {player['stat_source_id']} where parameterized_name = '{parameterize_name(player['name'])}';")
+
+        with open('update_player_ids.sql', 'w') as f:
+            for line in sql:
                 f.write(f"{line}\n")
