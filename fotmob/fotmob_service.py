@@ -38,11 +38,11 @@ class FotmobService:
 
         return teams
 
-    def get_players(self):
+    def get_players(self, league_id):
         """
         Fetches player data from Fotmob API and returns a list of players.
         """        
-        teams = self.get_teams(47)
+        teams = self.get_teams(league_id)
 
         players = []
 
@@ -364,11 +364,11 @@ class FotmobService:
             for line in migration:
                 f.write(f"{line}\n")
 
-    def generate_missing_player_ids(self, id_file_name):
+    def generate_missing_player_ids(self, league_id, id_file_name):
         """
         Gets players from all teams in Fotmob and generates sql for updating fotmob id for ids that are not found in the provided file.
         """
-        players = self.get_players()
+        players = self.get_players(league_id)
 
         ids = []
         with open(id_file_name, 'r') as f:

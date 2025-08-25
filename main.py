@@ -101,19 +101,31 @@ def main():
         fotmob_service = FotmobService()
         fotmob_service.get_fotmob_api_token()
     elif args.command == "update_fotmob_ids":
+        league_id = os.getenv('FOTMOB_DEFAULT_LEAGUE_ID')
+
+        if league_id is None:
+            logging.error("League id is not defined in .env")
+            sys.exit(1)
+
         id_file_name = askopenfilename(initialdir= '.')
 
         if id_file_name == "":
             sys.exit();
     
         fotmob_service = FotmobService()
-        fotmob_service.generate_missing_player_ids(id_file_name)
+        fotmob_service.generate_missing_player_ids(league_id, id_file_name)
     elif args.command == "generate_d11_fixtures":
         d11_service = D11Service()
         d11_service.generate_d11_fixtures()
     elif args.command == "generate_pl_fixtures":
+        league_id = os.getenv('FOTMOB_DEFAULT_LEAGUE_ID')
+
+        if league_id is None:
+            logging.error("League id is not defined in .env")
+            sys.exit(1)
+
         fotmob_service = FotmobService()
-        fotmob_service.generate_pl_fixtures(47)
+        fotmob_service.generate_pl_fixtures(league_id)
     else:
         parser.print_help()
 
