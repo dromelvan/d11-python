@@ -111,7 +111,7 @@ class FotmobService:
         match_data.away_team_name = general.awayTeam.name
 
         match_datetime = datetime.strptime(general.matchTimeUTC, "%a, %b %d, %Y, %H:%M %Z")
-        match_datetime = match_datetime + timedelta(hours=3)
+        match_datetime = match_datetime + timedelta(hours=2)
         match_data.datetime = match_datetime.strftime("%Y-%m-%d %H:%M")
 
         status = data.header.status
