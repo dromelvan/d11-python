@@ -1,8 +1,19 @@
 import os
+import time
 import requests
 import logging
 
 from .fotmob_token_manager import FotmobTokenManager
+
+SESSION_REFRESH_INTERVAL = 3 * 60 * 60
+FOTMOB_API_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) "
+        "Gecko/20100101 Firefox/146.0"
+    ),
+    "Accept": "application/json, text/plain, */*",
+    "Accept-Language": "en-US,en;q=0.5",
+}
 
 class FotmobApi:
     """
@@ -10,11 +21,18 @@ class FotmobApi:
     """
 
     def __init__(self):
+        self.session = requests.Session()
+        self.session.headers.update(FOTMOB_API_HEADERS)
+
+        self.last_refresh = 0
+        self._refresh_session()
+
         self.fotmob_token_manager = FotmobTokenManager()
 
-    def get_headers(self, url):
+    def _deprecated_get_headers(self, url):
         """
         Returns the headers required for Fotmob API requests, including the authentication token.
+        THIS USAGE IS DEPRECATED: Fotmob changed their authentication mechanism.
         """
         token = self.fotmob_token_manager.get_token(url)
 
@@ -63,10 +81,24 @@ class FotmobApi:
         If an error occurs, it logs the error and returns None.
         """
         try:
-            headers = self.get_headers(url)
-            response = requests.get(url, headers=headers)
+            if time.time() - self.last_refresh > SESSION_REFRESH_INTERVAL:
+                self._refresh_session()
+
+            response = self.session.get(url, timeout=15)
             response.raise_for_status()
             return response.json()
         except Exception as e:
             logging.error(f"Error fetching Fotmob data from {url}: {e}")
             return None
+
+    def _refresh_session(self):
+        """
+        Calls Footmob homepage to refresh session cookies.
+        """
+        try:
+            resp = self.session.get("https://www.fotmob.com/", timeout=15)
+            resp.raise_for_status()
+            self.last_refresh = time.time()
+            logging.info("Fotmob session refreshed.")
+        except Exception as e:
+            logging.error(f"Error refreshing Fotmob session: {e}")
