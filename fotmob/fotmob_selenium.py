@@ -42,6 +42,33 @@ class FotmobSelenium:
         self.options = Options()
         self.options.add_argument("-headless")
         self.options.profile = self.profile_path
+        self.options.profile.set_preference("devtools.jsonview.enabled", False)
+
+    def get_api_data(self, url):
+        data = None
+
+        try:
+            with webdriver.Firefox(options=self.options) as driver:
+                driver.set_page_load_timeout(WAIT_PAGE_LOAD)
+
+                driver.get(url)
+
+                wait = WebDriverWait(driver, WAIT_PAGE_LOAD)
+
+                data = wait.until(
+                    lambda d: (
+                        text := d.execute_script(
+                            "return document.documentElement.textContent"
+                        )
+                    ) and text.strip()
+                )
+        except TimeoutException as e:
+            logging.error(f"API timeout: {e}")
+        except Exception as e:
+            logging.exception(f"Error in get_api_data: {e}")
+
+        return data
+
 
     def get_api_token(self):
         token = None
