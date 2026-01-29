@@ -166,7 +166,7 @@ class FotmobService:
 
                 if event.card == "Yellow":
                     cards[player_id]["yellow_card_time"] = event.time
-                elif event.card == "Red":
+                else:
                     cards[player_id]["red_card_time"] = event.time
 
         # Fetch more precise ratings --------------------------------------------------------------                    
