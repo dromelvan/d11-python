@@ -11,8 +11,11 @@ FOTMOB_API_HEADERS = {
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:146.0) "
         "Gecko/20100101 Firefox/146.0"
     ),
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "en-US,en;q=0.5",
+    "Accept": "*/*",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Sec-Fetch-Dest": "empty",
+    "Sec-Fetch-Mode": "cors",
+    "Sec-Fetch-Site": "same-origin",
 }
 
 class FotmobApi:
