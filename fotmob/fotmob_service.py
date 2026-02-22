@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from datetime import datetime, timedelta
 
 from .fotmob_api import FotmobApi
+from .fotmob_cookie_manager import FotmobCookieManager
 from .fotmob_selenium import FotmobSelenium
 from .fotmob_models import FotmobMatchData, FotmobGoal, FotmobPlayer, FotmobTeam, FotmobFixture
 
@@ -339,6 +340,17 @@ class FotmobService:
                 token_file.write(token)
                 logging.info(f"Fotmob API token via Selenium updated in .fotmob_api_token: {token}")    
 
+    def get_fotmob_turnstile_cookie(self):
+        """
+        Fetches the Fotmob turnstile cookie from Firefox profiles and logs it.
+        """
+        cookie_manager = FotmobCookieManager()
+        cookie = cookie_manager.find_latest_turnstile_cookie()
+
+        if not cookie:
+            logging.error("Fotmob turnstile cookie not found in any Firefox profile")
+        else:
+            logging.info(f"Fotmob turnstile cookie found: {cookie}")
 
     def generate_pl_fixtures(self, league_id):
         """

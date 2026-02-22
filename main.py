@@ -34,6 +34,7 @@ commands = [
     ]},
     { "name": "parse_fotmob_har", "description": "Parses a .har file from Fotmob and updates the token in .fotmob_api_token", "arguments": []},
     { "name": "update_fotmob_token", "description": "Updates the Fotmob API token using Selenium", "arguments": []},
+    { "name": "update_fotmob_cookie", "description": "Updates the Fotmob turnstile cookie from Firefox profile cookie database", "arguments": []},
     { "name": "update_fotmob_ids", "description": "Generates SQL for updating missing Fotmob player ids", "arguments": []},
     { "name": "generate_pl_fixtures", "description": "Generates Premier League fixtures for the upcoming season", "arguments": []},
     { "name": "generate_d11_fixtures", "description": "Generates D11 fixtures for the upcoming season", "arguments": []},    
@@ -100,6 +101,9 @@ def main():
     elif args.command == "update_fotmob_token": 
         fotmob_service = FotmobService()
         fotmob_service.get_fotmob_api_token()
+    elif args.command == "update_fotmob_cookie": 
+        fotmob_service = FotmobService()
+        fotmob_service.get_fotmob_turnstile_cookie()
     elif args.command == "update_fotmob_ids":
         league_id = os.getenv('FOTMOB_DEFAULT_LEAGUE_ID')
 
