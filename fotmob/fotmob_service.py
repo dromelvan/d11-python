@@ -1,7 +1,9 @@
 import os
+from pathlib import Path
 import re
 import json
 import logging
+import time
 import unicodedata
 
 from types import SimpleNamespace
@@ -351,6 +353,48 @@ class FotmobService:
             logging.error("Fotmob turnstile cookie not found in any Firefox profile")
         else:
             logging.info(f"Fotmob turnstile cookie found: {cookie}")
+            expiry_raw = cookie.get("expiry", 0)
+            expiry = self.normalize_unix_time(expiry_raw)
+
+            if expiry == 0:
+                logging.info("Expires at: Session cookie")
+            else:
+                logging.info(
+                    "Expires at: %s",
+                    time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(expiry)),
+                )
+
+            cookies_file = Path(".fotmob_cookies")
+
+            try:
+                with cookies_file.open("w") as f:
+                    json.dump(
+                        {cookie["name"]: cookie["value"]},
+                        f,
+                        indent=2,
+                    )
+            except Exception as e:
+                logging.error(f"Failed to write Fotmob cookies file: {e}")
+                return None            
+
+    def normalize_unix_time(self, ts: int) -> int:
+        """
+        Convert Firefox cookie time to seconds if needed.
+        Handles seconds, milliseconds, or microseconds.
+        """
+        if ts == 0:
+            return 0
+
+        # microseconds
+        if ts > 10_000_000_000_000:
+            return ts // 1_000_000
+
+        # milliseconds
+        if ts > 10_000_000_000:
+            return ts // 1_000
+
+        # already seconds
+        return ts
 
     def generate_pl_fixtures(self, league_id):
         """
