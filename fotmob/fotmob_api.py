@@ -46,6 +46,12 @@ class FotmobApi:
             "x-mas": token
         }
         
+    def get_cookies(self):
+        """
+        Returns the cookies required for Fotmob API requests.
+        """
+        return self.fotmob_token_manager.get_fotmob_cookies()
+
     def get_table(self, league_id):
         """
         Gets the league table for a given league ID.
@@ -79,7 +85,7 @@ class FotmobApi:
         return self._call_api(url)
 
     def _call_api(self, url):
-        """        
+        """
         Makes a GET request to the Fotmob API and returns the JSON response.
         If an error occurs, it logs the error and returns None.
         """
@@ -87,7 +93,11 @@ class FotmobApi:
             if time.time() - self.last_refresh > SESSION_REFRESH_INTERVAL:
                 self._refresh_session()
 
-            response = self.session.get(url, timeout=15)
+            response = self.session.get(
+                url,
+                timeout=15,
+                cookies=self.get_cookies(),
+            )
             response.raise_for_status()
             return response.json()
         except Exception as e:

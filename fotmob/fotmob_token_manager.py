@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import base64
 import hashlib
@@ -121,6 +122,30 @@ class FotmobTokenManager:
         """
         with open(".fotmob_api_token", "r") as f:
             return f.read().strip()
+
+    def get_fotmob_cookies(self) -> str:
+        """
+        Returns hopefully valid Fotmob cookies.
+        """
+        return self.read_fotmob_cookies()
+
+    def read_fotmob_cookies(self) -> str:
+        """
+        Reads fotmob cookies that hopefully have been acquired from the Fotmob frontend from .fotmob_cookies
+        """
+        with open('.fotmob_cookies', 'r') as f:
+            lines = f.readlines()
+            # Remove comment lines
+            lines = [line for line in lines if not line.strip().startswith('#')]
+            text = ''.join(lines)
+            # Replace single-quoted values with double-quoted and escape inner double quotes
+            def fix_quotes(match):
+                value = match.group(1)
+                value = value.replace('"', '\\"')
+                return f': "{value}"'
+            text = re.sub(r':\s*\'([^\']*)\'', fix_quotes, text)
+            cookies = json.loads(text)        
+            return cookies
 
     def get_generated_token(self, url: str) -> Dict[str, Any]:
         """
