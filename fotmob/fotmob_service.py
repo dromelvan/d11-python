@@ -356,8 +356,15 @@ class FotmobService:
         if not cookie:
             logging.error("Fotmob turnstile cookie not found in any Firefox profile")
         else:
-            logging.info(f"Fotmob turnstile cookie found: {cookie}")
-            cookie_manager.write_fotmob_cookies(cookie)            
+            try:
+                existing_cookies = cookie_manager.read_fotmob_cookies()
+                current_value = existing_cookies.get("turnstile_verified")
+            except Exception:
+                current_value = None
+
+            if cookie["value"] != current_value:
+                logging.info(f"Updating Fotmob turnstile cookie: {cookie}")
+                cookie_manager.write_fotmob_cookies(cookie)            
 
     def generate_pl_fixtures(self, league_id):
         """
