@@ -33,6 +33,7 @@ class FotmobApi:
 
         self.fotmob_token_manager = FotmobTokenManager()
         self.fotmob_cookie_manager = FotmobCookieManager()
+
     def _deprecated_get_headers(self, url):
         """
         Returns the headers required for Fotmob API requests, including the authentication token.

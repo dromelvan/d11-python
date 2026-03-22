@@ -17,6 +17,7 @@ class D11Schedule:
     """
     def __init__(self):
         self.d11_service = D11Service()
+        self.fotmob_service = FotmobService()
 
     def task_update_squads(self):
         """
@@ -35,8 +36,7 @@ class D11Schedule:
         Triggers a Fotmob token update.
         """
 
-        fotmob_service = FotmobService()
-        fotmob_service.get_fotmob_api_token()
+        self.fotmob_service.get_fotmob_api_token()
 
         # After running, schedule the next run with jitter
         next_run = datetime.now() + timedelta(hours=2) + timedelta(minutes=random.randint(-5, 5))
@@ -50,12 +50,19 @@ class D11Schedule:
         schedule.every().day.at(next_run.strftime("%H:%M")).do(self.task_update_fotmob_token).tag(UPDATE_FOTMOB_TOKEN_TAG)
         logging.info(f"Next run scheduled for {next_run.strftime('%Y-%m-%d %H:%M')}")
 
+    def task_update_fotmob_cookies(self):
+        """
+        Triggers a Fotmob turnstile cookie update.
+        """
+        self.fotmob_service.get_fotmob_turnstile_cookie()
+
     def start(self):
         """
         Starts the scheduler.
         """
         schedule.every().day.at("10:00").do(self.task_update_squads)
         schedule.every().minute.do(self.task_update_fotmob_token).tag(UPDATE_FOTMOB_TOKEN_TAG)
+        schedule.every().hour.do(self.task_update_fotmob_cookies)
 
 
         logging.info("D11 schedule started...")
