@@ -119,6 +119,10 @@ class FotmobService:
 
         status = data.header.status
 
+        if status.cancelled:
+            match_data.elapsed = "N/A"
+            match_data.status = "POSTPONED"
+            return match_data
         if status.finished:
             match_data.elapsed = "FT"
             match_data.status = "FULL_TIME"
