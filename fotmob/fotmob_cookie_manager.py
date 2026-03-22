@@ -1,8 +1,10 @@
 import json
+import logging
 import re
 import sqlite3
 import shutil
 import tempfile
+import time
 from pathlib import Path
 
 FIREFOX_PROFILES_DIR = Path.home() / "Library/Application Support/Firefox/Profiles"
@@ -35,36 +37,35 @@ class FotmobCookieManager:
             cookies = json.loads(text)        
             return cookies
 
-    def safe_copy(self,db_path: Path):
+
+    def write_fotmob_cookies(self, cookie: dict):
         """
-        Create a temporary copy of the given SQLite database, including its WAL file if it exists.
+        Writes the given Fotmob cookie to .fotmob_cookies, logging the expiry.
         """
-        tmp_dir = Path(tempfile.mkdtemp())
-        tmp_db = tmp_dir / "cookies.sqlite"
+        expiry_raw = cookie.get("expiry", 0)
+        expiry = self.normalize_unix_time(expiry_raw)
 
-        shutil.copy2(db_path, tmp_db)
+        if expiry == 0:
+            logging.info("Expires at: Session cookie")
+        else:
+            logging.info(
+                "Expires at: %s",
+                time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(expiry)),
+            )
 
-        wal_src = db_path.with_name("cookies.sqlite-wal")
-        if wal_src.exists():
-            shutil.copy2(wal_src, tmp_db.with_name("cookies.sqlite-wal"))
+        cookies_file = Path(".fotmob_cookies")
 
-        return tmp_dir, tmp_db
-
-    def row_to_cookie(self, row):
-        """
-        Convert a database row to a cookie dictionary.
-        """
-        return {
-            "host": row[0],
-            "name": row[1],
-            "value": row[2],
-            "path": row[3],
-            "expiry": row[4],
-            "secure": bool(row[5]),
-            "httpOnly": bool(row[6]),
-        }
-
-
+        try:
+            with cookies_file.open("w") as f:
+                json.dump(
+                    {cookie["name"]: cookie["value"]},
+                    f,
+                    indent=2,
+                )
+        except Exception as e:
+            logging.error(f"Failed to write Fotmob cookies file: {e}")
+            return None
+        
     def get_best_turnstile_cookie(self, conn):
         """
         Retrieve the best turnstile cookie from the given database connection.
@@ -128,3 +129,51 @@ class FotmobCookieManager:
                 shutil.rmtree(tmp_dir, ignore_errors=True)
 
         return self.row_to_cookie(best_cookie) if best_cookie else None
+
+    def normalize_unix_time(self, ts: int) -> int:
+        """
+        Convert Firefox cookie time to seconds if needed.
+        Handles seconds, milliseconds, or microseconds.
+        """
+        if ts == 0:
+            return 0
+
+        # microseconds
+        if ts > 10_000_000_000_000:
+            return ts // 1_000_000
+
+        # milliseconds
+        if ts > 10_000_000_000:
+            return ts // 1_000
+
+        # already seconds
+        return ts
+
+    def safe_copy(self,db_path: Path):
+        """
+        Create a temporary copy of the given SQLite database, including its WAL file if it exists.
+        """
+        tmp_dir = Path(tempfile.mkdtemp())
+        tmp_db = tmp_dir / "cookies.sqlite"
+
+        shutil.copy2(db_path, tmp_db)
+
+        wal_src = db_path.with_name("cookies.sqlite-wal")
+        if wal_src.exists():
+            shutil.copy2(wal_src, tmp_db.with_name("cookies.sqlite-wal"))
+
+        return tmp_dir, tmp_db
+
+    def row_to_cookie(self, row):
+        """
+        Convert a database row to a cookie dictionary.
+        """
+        return {
+            "host": row[0],
+            "name": row[1],
+            "value": row[2],
+            "path": row[3],
+            "expiry": row[4],
+            "secure": bool(row[5]),
+            "httpOnly": bool(row[6]),
+        }
