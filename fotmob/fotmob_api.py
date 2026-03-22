@@ -4,6 +4,7 @@ import requests
 import logging
 
 from .fotmob_token_manager import FotmobTokenManager
+from .fotmob_cookie_manager import FotmobCookieManager
 
 SESSION_REFRESH_INTERVAL = 3 * 60 * 60
 FOTMOB_API_HEADERS = {
@@ -31,7 +32,7 @@ class FotmobApi:
         self._refresh_session()
 
         self.fotmob_token_manager = FotmobTokenManager()
-
+        self.fotmob_cookie_manager = FotmobCookieManager()
     def _deprecated_get_headers(self, url):
         """
         Returns the headers required for Fotmob API requests, including the authentication token.
@@ -50,7 +51,7 @@ class FotmobApi:
         """
         Returns the cookies required for Fotmob API requests.
         """
-        return self.fotmob_token_manager.get_fotmob_cookies()
+        return self.fotmob_cookie_manager.get_fotmob_cookies()
 
     def get_table(self, league_id):
         """

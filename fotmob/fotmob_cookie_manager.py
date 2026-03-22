@@ -1,3 +1,5 @@
+import json
+import re
 import sqlite3
 import shutil
 import tempfile
@@ -9,6 +11,30 @@ FOTMOB_HOST = "%fotmob.com%"
 FOTMOB_NAME = "turnstile_verified"
 
 class FotmobCookieManager:
+    def get_fotmob_cookies(self) -> str:
+        """
+        Returns hopefully valid Fotmob cookies.
+        """
+        return self.read_fotmob_cookies()
+
+    def read_fotmob_cookies(self) -> str:
+        """
+        Reads fotmob cookies that hopefully have been acquired from the Fotmob frontend from .fotmob_cookies
+        """
+        with open('.fotmob_cookies', 'r') as f:
+            lines = f.readlines()
+            # Remove comment lines
+            lines = [line for line in lines if not line.strip().startswith('#')]
+            text = ''.join(lines)
+            # Replace single-quoted values with double-quoted and escape inner double quotes
+            def fix_quotes(match):
+                value = match.group(1)
+                value = value.replace('"', '\\"')
+                return f': "{value}"'
+            text = re.sub(r':\s*\'([^\']*)\'', fix_quotes, text)
+            cookies = json.loads(text)        
+            return cookies
+
     def safe_copy(self,db_path: Path):
         """
         Create a temporary copy of the given SQLite database, including its WAL file if it exists.
