@@ -7,7 +7,7 @@ import time
 import unicodedata
 
 from types import SimpleNamespace
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from .fotmob_api import FotmobApi
 from .fotmob_cookie_manager import FotmobCookieManager
@@ -114,7 +114,7 @@ class FotmobService:
         match_data.away_team_name = general.awayTeam.name
 
         match_datetime = datetime.strptime(general.matchTimeUTC, "%a, %b %d, %Y, %H:%M %Z")
-        match_datetime = match_datetime + timedelta(hours=2)
+        match_datetime = match_datetime.replace(tzinfo=timezone.utc).astimezone()
         match_data.datetime = match_datetime.strftime("%Y-%m-%d %H:%M")
 
         status = data.header.status
